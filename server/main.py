@@ -24,17 +24,42 @@ async def process_audio(fast_socket: WebSocket):
     async def get_transcript(data: Dict) -> None:
         if 'channel' in data:
             transcript = data['channel']['alternatives'][0]['transcript']
+            print(f"Transcript: '{transcript}'")
         
             if transcript:
-                gpt_response = get_response(transcript)
-                await fast_socket.send_text(transcript + (':' * 25) + gpt_response + ('-' * 25))
+                gpt_response = process_response(transcript)
+                await fast_socket.send_text("Transcript: " + transcript + "\n")
+                await fast_socket.send_text("GPT RESPONSE: " + gpt_response + "\n")
+        else:
+            print('no transcript')
 
     deepgram_socket = await connect_to_deepgram(get_transcript)
     return deepgram_socket
 
+
+def process_response(prompt: str):
+    global is_talking
+    response = get_response(prompt)
+    is_talking = True
+    play_response(response)
+    is_talking = False
+    return response
+
+
+def change_voice(engine, language, gender='VoiceGenderFemale'):
+    for voice in engine.getProperty('voices'):
+        if language in voice.languages and gender == voice.gender:
+            engine.setProperty('voice', voice.id)
+            return True
+
+    raise RuntimeError("Language '{}' for gender '{}' not found".format(language, gender))
+
 def play_response(text):
     engine = pyttsx3.init()
-    engine.setProperty('voice', 'com.apple.eloquence.de-DE.Reed')
+    try:
+        engine.setProperty('voice', 'com.apple.speech.synthesis.voice.yannick.premium')
+    except:
+        change_voice(engine, 'de_DE', 'VoiceGenderMale')
     engine.setProperty('rate', 130)
     engine.setProperty('volume', 10)
     engine.say(text)
@@ -45,7 +70,8 @@ async def connect_to_deepgram(transcript_received_handler: Callable[[Dict], None
         socket = await dg_client.transcription.live({
             'punctuate': True,
             'interim_results': False,
-            'language': 'de'
+            'language': 'de',
+            'endpoint': 200
         })
         socket.registerHandler(socket.event.CLOSE, lambda c: print(f'Connection closed with code {c}.'))
         socket.registerHandler(socket.event.TRANSCRIPT_RECEIVED, transcript_received_handler)
