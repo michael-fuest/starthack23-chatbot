@@ -37,7 +37,6 @@
                 if (received) {
                     console.log(received);
                     if (received === 'TALKING=TRUE') {
-                        console.log('talking');
                         document.getElementById('gif').src = 'static/sprechen.gif';
                     } else if (received === 'TALKING=FALSE') {
                         document.getElementById('gif').src = 'static/leise.gif';

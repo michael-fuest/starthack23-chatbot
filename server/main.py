@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-
 from typing import Dict, Callable
 from deepgram import Deepgram
 from dotenv import load_dotenv
@@ -14,11 +13,15 @@ import datetime
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name='static')
+message_hist = [
+        {"role": "system", "content": "You are a friendly conversational partner named Walter that occasionally asks follow-up questions and replies in german only. Your name is Walter and you are talking to Hannelore and you are very friendly. You speak like an 80-year old german granddad. You know that Hannelore is 76 years old and that her husband died 14 years ago. You know that she has three children, two of them are named Max and Stefan and that she has a daughter named Christiane. You know that she lives in Otterfing. You know that she likes to paint and play Scrabble. You know that her son Stefan is coming to visit her on Wednesday and that he is bringing his two children with him. You know that she is very happy about that. But you should only disclose this information when asked about it."},
+        {"role": "user", "content": "Hallo, ich bin Hannelore."},
+        {"role": "assistant", "content": "Hallo Hannelore, schön dich kennenzulernen."},
+        ]
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 dg_client = Deepgram(os.getenv('DEEPGRAM_API_KEY'))
-
 templates = Jinja2Templates(directory="templates")
 
 time_stop_talking = datetime.datetime.now()
@@ -33,11 +36,12 @@ def change_voice(engine, language, gender='VoiceGenderFemale'):
 
 async def process_audio(fast_socket: WebSocket):
     async def get_transcript(data: Dict) -> None:
+        global message_hist
         if 'channel' in data:
             transcript = data['channel']['alternatives'][0]['transcript']
-            print(f"Transcript: '{transcript}'")
-        
-            if transcript:
+            if len(transcript) > 5 or transcript.lower() == 'ja' or transcript.lower() == 'nein':
+                print(f"Transcript: '{transcript}'")
+                message_hist.append({"role": "user", "content": transcript})
                 gpt_response = get_response(transcript)
                 await fast_socket.send_text("TALKING=TRUE")
                 play_response(gpt_response)
@@ -76,7 +80,7 @@ async def connect_to_deepgram(transcript_received_handler: Callable[[Dict], None
             'punctuate': True,
             'interim_results': False,
             'language': 'de',
-            'endpoint': 300
+            'endpoint': 350
         })
         socket.registerHandler(socket.event.CLOSE, lambda c: print(f'Connection closed with code {c}.'))
         socket.registerHandler(socket.event.TRANSCRIPT_RECEIVED, transcript_received_handler)
@@ -86,22 +90,17 @@ async def connect_to_deepgram(transcript_received_handler: Callable[[Dict], None
         raise Exception(f'Could not open socket: {e}')
     
 def get_response(message):
+    global message_hist
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a friendly conversational partner that occasionally asks follow-up questions and replies in german only."
-            },
-            {
-                "role": "user",
-                "content": message
-            },
-        ],
-        temperature=0.5,
+        messages = message_hist,
+        temperature=0.7,
         max_tokens=100,
     )
-    return response['choices'][0]['message']['content']
+    response = response['choices'][0]['message']['content']
+    message_hist.append({"role": "assistant", "content": response})
+    return response
+
  
 @app.get("/", response_class=HTMLResponse)
 def get(request: Request):
@@ -116,9 +115,9 @@ async def websocket_endpoint(websocket: WebSocket):
 
         while True:
             data = await websocket.receive_bytes()
-            print(f"Received {len(data)} bytes")
+
             # if the time since the last response was less than 2 seconds, dont forward the audio
-            if (datetime.datetime.now() - time_stop_talking).total_seconds() < 2:
+            if (datetime.datetime.now() - time_stop_talking).total_seconds() < 1.5:
                 continue
             deepgram_socket.send(data)
     except Exception as e:
