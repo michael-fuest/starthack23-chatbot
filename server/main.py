@@ -13,21 +13,24 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 load_dotenv()
 app = FastAPI()
 dg_client = Deepgram(os.getenv('DEEPGRAM_API_KEY'))
+<<<<<<< HEAD
 engine = pyttsx3.init()
 engine.setProperty('voice', 'com.apple.eloquence.de-DE.Reed')
 engine.setProperty('rate', 130)
 engine.setProperty('volume', 10)
+=======
+>>>>>>> 5d91008 (Revert "Bugfixing")
 
 templates = Jinja2Templates(directory="templates")
 
 async def process_audio(fast_socket: WebSocket):
     async def get_transcript(data: Dict) -> None:
-        print('-' * 20)
+        #print('-' * 20)
         if 'channel' in data:
             transcript = data['channel']['alternatives'][0]['transcript']
+            print('trans:', transcript)
         
-            if len(transcript) > 6:
-                print('trans:', transcript)
+            if transcript:
                 gpt_response = await process_response(transcript, fast_socket)
                 print('res:', gpt_response)
                 await fast_socket.send_text(transcript + '\n' + gpt_response)
@@ -36,13 +39,19 @@ async def process_audio(fast_socket: WebSocket):
     return deepgram_socket
 
 async def process_response(prompt: str, fast_socket: WebSocket):
-    response = get_response(prompt)
+    global is_talking
+    response = await get_response(prompt)
+    is_talking = True
     play_response(response)
+    is_talking = False
     await fast_socket.send_text(response)
     return response
 
 def play_response(text):
-    global engine
+    engine = pyttsx3.init()
+    engine.setProperty('voice', 'com.apple.eloquence.de-DE.Reed')
+    engine.setProperty('rate', 130)
+    engine.setProperty('volume', 10)
     engine.say(text)
     engine.runAndWait()
     return
@@ -63,8 +72,8 @@ async def connect_to_deepgram(transcript_received_handler: Callable[[Dict], None
     except Exception as e:
         raise Exception(f'Could not open socket: {e}')
     
-def get_response(message):
-    response = openai.ChatCompletion.create(model="gpt-3.5-turbo",
+async def get_response(message):
+    response = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo",
     messages=[
         {"role": "system", "content": "You are a friendly conversational partner that occasionally asks follow-up questions and replies in german only."},
         {"role": "user", "content": message},
@@ -86,7 +95,7 @@ async def websocket_endpoint(websocket: WebSocket):
         deepgram_socket = await process_audio(websocket) 
 
         while True:
-            if not engine.isBusy():
+            if not is_talking:
                 data = await websocket.receive_bytes()
                 deepgram_socket.send(data)
 
