@@ -39,7 +39,7 @@ async def process_audio(fast_socket: WebSocket):
         global message_hist
         if 'channel' in data:
             transcript = data['channel']['alternatives'][0]['transcript']
-            if transcript:
+            if len(transcript) > 5 or transcript.lower() == 'ja' or transcript.lower() == 'nein':
                 print(f"Transcript: '{transcript}'")
                 message_hist.append({"role": "user", "content": transcript})
                 gpt_response = get_response(transcript)
@@ -117,7 +117,7 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_bytes()
 
             # if the time since the last response was less than 2 seconds, dont forward the audio
-            if (datetime.datetime.now() - time_stop_talking).total_seconds() < 2:
+            if (datetime.datetime.now() - time_stop_talking).total_seconds() < 1.5:
                 continue
             deepgram_socket.send(data)
     except Exception as e:
