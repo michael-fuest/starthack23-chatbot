@@ -4,7 +4,11 @@ from fastapi.templating import Jinja2Templates
 from typing import Dict, Callable
 from deepgram import Deepgram
 from dotenv import load_dotenv
+import openai
 import os
+import pyttsx3
+
+openai.api_key = os.environ["OPENAI_API_KEY"]
 
 load_dotenv()
 
@@ -22,11 +26,20 @@ async def process_audio(fast_socket: WebSocket):
             transcript = data['channel']['alternatives'][0]['transcript']
         
             if transcript:
-                await fast_socket.send_text(transcript)
+                gpt_response = await get_response(transcript)
+                await fast_socket.send_text(transcript + '\n' + gpt_response)
 
     deepgram_socket = await connect_to_deepgram(get_transcript)
-
     return deepgram_socket
+
+async def play_response(text):
+    engine = pyttsx3.init()
+    engine.setProperty('voice', 'com.apple.eloquence.de-DE.Reed')
+    engine.setProperty('rate', 130)
+    engine.setProperty('volume', 10)
+    engine.say(text)
+    engine.runAndWait()
+    return
 
 async def connect_to_deepgram(transcript_received_handler: Callable[[Dict], None]):
     try:
@@ -41,6 +54,17 @@ async def connect_to_deepgram(transcript_received_handler: Callable[[Dict], None
         return socket
     except Exception as e:
         raise Exception(f'Could not open socket: {e}')
+    
+async def get_response(message):
+    response = openai.ChatCompletion.create(model="gpt-3.5-turbo",
+    messages=[
+        {"role": "system", "content": "You are a friendly conversational partner that occasionally asks follow-up questions and replies in german only."},
+        {"role": "user", "content": message},
+        ]
+    ,temperature = 0.5,
+    max_tokens = 100,
+    )
+    return response['choices'][0]['message']['content']
  
 @app.get("/", response_class=HTMLResponse)
 def get(request: Request):

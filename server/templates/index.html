@@ -7,7 +7,6 @@
         <h1>Transcribe Audio With FastAPI</h1>
         <p id="status">Connection status will go here</p>
         <p id="transcript"></p>
-
         <script>
             navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
                 if (!MediaRecorder.isTypeSupported('audio/webm'))

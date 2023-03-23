@@ -1,3 +1,9 @@
 fastapi
 uvicorn
 deepgram-sdk
+python-dotenv
+jinja2
+speech-recognition
+pyaudio
+openai
+pyttsx3
