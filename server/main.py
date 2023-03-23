@@ -12,9 +12,9 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 
 load_dotenv()
 
-app = FastAPI()
-
 is_talking = False
+
+app = FastAPI()
 
 dg_client = Deepgram(os.getenv('DEEPGRAM_API_KEY'))
 
@@ -22,22 +22,25 @@ templates = Jinja2Templates(directory="templates")
 
 async def process_audio(fast_socket: WebSocket):
     async def get_transcript(data: Dict) -> None:
-        #print('-' * 20)
+        print("we got a transcript")
         if 'channel' in data:
             transcript = data['channel']['alternatives'][0]['transcript']
-            print('trans:', transcript)
+            print(f"trans: '{transcript}'")
         
             if transcript:
                 gpt_response = await process_response(transcript, fast_socket)
                 print('res:', gpt_response)
-                await fast_socket.send_text(transcript + '\n' + gpt_response)
+                await fast_socket.send_text("Transcript: " + transcript + "\n")
+                await fast_socket.send_text("GPT RESPONSE: " + gpt_response + "\n")
+        else:
+            print('no transcript')
 
     deepgram_socket = await connect_to_deepgram(get_transcript)
     return deepgram_socket
 
 async def process_response(prompt: str, fast_socket: WebSocket):
     global is_talking
-    response = await get_response(prompt)
+    response = get_response(prompt)
     is_talking = True
     play_response(response)
     is_talking = False
@@ -46,7 +49,7 @@ async def process_response(prompt: str, fast_socket: WebSocket):
 
 def play_response(text):
     engine = pyttsx3.init()
-    engine.setProperty('voice', 'com.apple.eloquence.de-DE.Reed')
+    engine.setProperty('voice', 'com.apple.speech.synthesis.voice.yannick.premium')
     engine.setProperty('rate', 130)
     engine.setProperty('volume', 10)
     engine.say(text)
@@ -69,8 +72,8 @@ async def connect_to_deepgram(transcript_received_handler: Callable[[Dict], None
     except Exception as e:
         raise Exception(f'Could not open socket: {e}')
     
-async def get_response(message):
-    response = await openai.ChatCompletion.acreate(model="gpt-3.5-turbo",
+def get_response(message):
+    response = openai.ChatCompletion.create(model="gpt-3.5-turbo",
     messages=[
         {"role": "system", "content": "You are a friendly conversational partner that occasionally asks follow-up questions and replies in german only."},
         {"role": "user", "content": message},
