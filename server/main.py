@@ -38,7 +38,10 @@ async def process_audio(fast_socket: WebSocket):
             print(f"Transcript: '{transcript}'")
         
             if transcript:
-                gpt_response = process_response(transcript)
+                gpt_response = get_response(transcript)
+                await fast_socket.send_text("TALKING=TRUE")
+                play_response(gpt_response)
+                await fast_socket.send_text("TALKING=FALSE")
                 await fast_socket.send_text("Transcript: " + transcript + "\n")
                 await fast_socket.send_text("GPT RESPONSE: " + gpt_response + "\n")
         else:
@@ -73,7 +76,7 @@ async def connect_to_deepgram(transcript_received_handler: Callable[[Dict], None
             'punctuate': True,
             'interim_results': False,
             'language': 'de',
-            'endpoint': 200
+            'endpoint': 300
         })
         socket.registerHandler(socket.event.CLOSE, lambda c: print(f'Connection closed with code {c}.'))
         socket.registerHandler(socket.event.TRANSCRIPT_RECEIVED, transcript_received_handler)
