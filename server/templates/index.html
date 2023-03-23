@@ -1,66 +1,69 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Walter</title>
-        <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
-    </head>
-    <body>
-        <div>
-            <img id="gif" src="static/leise.gif" />
-        </div>
-        <button id="button" onclick="changeTalking()">change talking</button>
-        <p id="status">Connection status will go here</p>
-        <p id="transcript"></p>
-        <script>
-            navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-                if (!MediaRecorder.isTypeSupported('audio/webm'))
-                    return alert('Browser not supported');
 
-                const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-                const socket = new WebSocket('ws://localhost:8000/listen');
+<head>
+    <title>Walter</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
 
-                socket.onopen = () => {
-                    document.querySelector('#status').textContent = 'Connected';
-                    console.log({ event: 'onopen' });
-                    mediaRecorder.addEventListener('dataavailable', async (event) => {
-                        if (event.data.size > 0 && socket.readyState == 1) {
-                            socket.send(event.data);
-                        }
-                    })
-                    mediaRecorder.start(250);
-                }
+<body>
+    <div>
+        <img id="gif" src="static/leise.gif" />
+    </div>
+    <button id="button" onclick="changeTalking()">change talking</button>
+    <p id="status">Connection status will go here</p>
+    <p id="transcript"></p>
+    <script>
+        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+            if (!MediaRecorder.isTypeSupported('audio/webm'))
+                return alert('Browser not supported');
 
-                socket.onmessage = (message) => {
-                    const received = message.data;
-                    if (received) {
-                        console.log(received);
-                        if (received === 'TALKING=TRUE') {
-                            document.getElementById('gif').src = 'static/sprechen.gif';
-                        } else if (received === 'TALKING=FALSE') {
-                            document.getElementById('gif').src = 'static/leise.gif'
-                        } else {
-                            document.querySelector('#transcript').textContent += ' ' + received;
-                        }
+            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            const socket = new WebSocket('ws://localhost:8000/listen');
+
+            socket.onopen = () => {
+                document.querySelector('#status').textContent = 'Connected';
+                console.log({ event: 'onopen' });
+                mediaRecorder.addEventListener('dataavailable', async (event) => {
+                    if (event.data.size > 0 && socket.readyState == 1) {
+                        socket.send(event.data);
+                    }
+                })
+                mediaRecorder.start(250);
+            }
+
+            socket.onmessage = (message) => {
+                const received = message.data;
+                if (received) {
+                    console.log(received);
+                    if (received === 'TALKING=TRUE') {
+                        document.getElementById('gif').src = 'static/sprechen.gif';
+                    } else if (received === 'TALKING=FALSE') {
+                        document.getElementById('gif').src = 'static/leise.gif';
+                    } else {
+                        document.querySelector('#transcript').textContent += ' ' + received;
                     }
                 }
-
-                socket.onclose = () => {
-                    console.log({ event: 'onclose' });
-                }
-
-                socket.onerror = (error) => {
-                    console.log({ event: 'onerror', error });
-                }
-            })
-
-            function changeTalking() {
-                const gif = document.getElementById('gif');
-                if (gif.src.includes('sprechen')) {
-                    gif.src = 'static/leise.gif';
-                } else {
-                    gif.src = 'static/sprechen.gif';
-                }
             }
-        </script>
-    </body>
+
+            socket.onclose = () => {
+                console.log({ event: 'onclose' });
+            }
+
+            socket.onerror = (error) => {
+                console.log({ event: 'onerror', error });
+            }
+        })
+
+        function changeTalking() {
+            const gif = document.getElementById('gif');
+            if (gif.src.includes('sprechen')) {
+                gif.src = 'static/leise.gif';
+            } else {
+                gif.src = 'static/sprechen.gif';
+            }
+        }
+    </script>
+</body>
+
 </html>
