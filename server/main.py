@@ -11,58 +11,38 @@ import pyttsx3
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
 load_dotenv()
-
-is_talking = False
-
 app = FastAPI()
-
 dg_client = Deepgram(os.getenv('DEEPGRAM_API_KEY'))
+engine = pyttsx3.init()
+engine.setProperty('voice', 'com.apple.eloquence.de-DE.Reed')
+engine.setProperty('rate', 130)
+engine.setProperty('volume', 10)
 
 templates = Jinja2Templates(directory="templates")
 
 async def process_audio(fast_socket: WebSocket):
     async def get_transcript(data: Dict) -> None:
-        print("we got a transcript")
+        print('-' * 20)
         if 'channel' in data:
             transcript = data['channel']['alternatives'][0]['transcript']
-            print(f"trans: '{transcript}'")
         
-            if transcript:
+            if len(transcript) > 6:
+                print('trans:', transcript)
                 gpt_response = await process_response(transcript, fast_socket)
                 print('res:', gpt_response)
-                await fast_socket.send_text("Transcript: " + transcript + "\n")
-                await fast_socket.send_text("GPT RESPONSE: " + gpt_response + "\n")
-        else:
-            print('no transcript')
+                await fast_socket.send_text(transcript + '\n' + gpt_response)
 
     deepgram_socket = await connect_to_deepgram(get_transcript)
     return deepgram_socket
 
 async def process_response(prompt: str, fast_socket: WebSocket):
-    global is_talking
     response = get_response(prompt)
-    is_talking = True
     play_response(response)
-    is_talking = False
     await fast_socket.send_text(response)
     return response
 
-def change_voice(engine, language, gender='VoiceGenderFemale'):
-    for voice in engine.getProperty('voices'):
-        if language in voice.languages and gender == voice.gender:
-            engine.setProperty('voice', voice.id)
-            return True
-
-    raise RuntimeError("Language '{}' for gender '{}' not found".format(language, gender))
-
 def play_response(text):
-    engine = pyttsx3.init()
-    try:
-        engine.setProperty('voice', 'com.apple.speech.synthesis.voice.yannick.premium')
-    except:
-        change_voice(engine, 'de_DE', 'VoiceGenderMale') 
-    engine.setProperty('rate', 130)
-    engine.setProperty('volume', 10)
+    global engine
     engine.say(text)
     engine.runAndWait()
     return
@@ -106,7 +86,7 @@ async def websocket_endpoint(websocket: WebSocket):
         deepgram_socket = await process_audio(websocket) 
 
         while True:
-            if not is_talking:
+            if not engine.isBusy():
                 data = await websocket.receive_bytes()
                 deepgram_socket.send(data)
 
