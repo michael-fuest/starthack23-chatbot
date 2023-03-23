@@ -13,13 +13,10 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 load_dotenv()
 app = FastAPI()
 dg_client = Deepgram(os.getenv('DEEPGRAM_API_KEY'))
-<<<<<<< HEAD
 engine = pyttsx3.init()
 engine.setProperty('voice', 'com.apple.eloquence.de-DE.Reed')
 engine.setProperty('rate', 130)
 engine.setProperty('volume', 10)
-=======
->>>>>>> 5d91008 (Revert "Bugfixing")
 
 templates = Jinja2Templates(directory="templates")
 
