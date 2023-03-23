@@ -47,9 +47,20 @@ async def process_response(prompt: str, fast_socket: WebSocket):
     await fast_socket.send_text(response)
     return response
 
+def change_voice(engine, language, gender='VoiceGenderFemale'):
+    for voice in engine.getProperty('voices'):
+        if language in voice.languages and gender == voice.gender:
+            engine.setProperty('voice', voice.id)
+            return True
+
+    raise RuntimeError("Language '{}' for gender '{}' not found".format(language, gender))
+
 def play_response(text):
     engine = pyttsx3.init()
-    engine.setProperty('voice', 'com.apple.speech.synthesis.voice.yannick.premium')
+    try:
+        engine.setProperty('voice', 'com.apple.speech.synthesis.voice.yannick.premium')
+    except:
+        change_voice(engine, 'de_DE', 'VoiceGenderMale') 
     engine.setProperty('rate', 130)
     engine.setProperty('volume', 10)
     engine.say(text)
