@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import openai
 import os
 import pyttsx3
+import datetime
 
 
 app = FastAPI()
@@ -19,6 +20,16 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 dg_client = Deepgram(os.getenv('DEEPGRAM_API_KEY'))
 
 templates = Jinja2Templates(directory="templates")
+
+time_stop_talking = datetime.datetime.now()
+
+def change_voice(engine, language, gender='VoiceGenderFemale'):
+    for voice in engine.getProperty('voices'):
+        if language in voice.languages and gender == voice.gender:
+            engine.setProperty('voice', voice.id)
+            return True
+
+    raise RuntimeError("Language '{}' for gender '{}' not found".format(language, gender))
 
 async def process_audio(fast_socket: WebSocket):
     async def get_transcript(data: Dict) -> None:
@@ -38,21 +49,9 @@ async def process_audio(fast_socket: WebSocket):
 
 
 def process_response(prompt: str):
-    global is_talking
     response = get_response(prompt)
-    is_talking = True
     play_response(response)
-    is_talking = False
     return response
-
-
-def change_voice(engine, language, gender='VoiceGenderFemale'):
-    for voice in engine.getProperty('voices'):
-        if language in voice.languages and gender == voice.gender:
-            engine.setProperty('voice', voice.id)
-            return True
-
-    raise RuntimeError("Language '{}' for gender '{}' not found".format(language, gender))
 
 def play_response(text):
     engine = pyttsx3.init()
@@ -64,6 +63,9 @@ def play_response(text):
     engine.setProperty('volume', 10)
     engine.say(text)
     engine.runAndWait()
+    print('Response played')
+    global time_stop_talking
+    time_stop_talking = datetime.datetime.now()
 
 async def connect_to_deepgram(transcript_received_handler: Callable[[Dict], None]):
     try:
@@ -111,6 +113,10 @@ async def websocket_endpoint(websocket: WebSocket):
 
         while True:
             data = await websocket.receive_bytes()
+            print(f"Received {len(data)} bytes")
+            # if the time since the last response was less than 2 seconds, dont forward the audio
+            if (datetime.datetime.now() - time_stop_talking).total_seconds() < 2:
+                continue
             deepgram_socket.send(data)
     except Exception as e:
         raise Exception(f'Could not process audio: {e}')
