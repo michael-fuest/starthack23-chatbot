@@ -3,7 +3,7 @@ uvicorn
 deepgram-sdk
 python-dotenv
 jinja2
-speech-recognition
+speechrecognition
 pyaudio
 openai
 pyttsx3

@@ -4,6 +4,7 @@ import openai
 import os
 import gtts
 import pyttsx3
+import datetime
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
@@ -13,9 +14,10 @@ def recognize_speech():
 
     with mic as source:
         print('Listening...')
-        recognizer.pause_threshold = 1
+        before = datetime.datetime.now()
         recognizer.adjust_for_ambient_noise(source)
         audio = recognizer.listen(source, timeout = 5)
+        after = datetime.datetime.now()
         print('Done listening!')
 
     response = {
@@ -46,12 +48,11 @@ def get_response(message, message_hist = None):
     else:
         messages = [
         {"role": "system", "content": "You are a friendly conversational partner that occasionally asks follow-up questions and replies in german only. Your name is Walter and you are talking to Hannelore and you are very friendly. You speak like an 80-year old german granddad"},
-        {"role": "user", "content": "Hallo, ich bin Hannelore. Ich habe drei Kinder, die heißen Max, Stefan und Christiane. Ich wohne in Otterfing, bin 76 Jahre alt und mein Mann ist vor 14 Jahren an Krebs verstorben. Ich male gerne und spiele viel Scrabble. Mein Sohn Stefan kommt mich am Mittwoch besuchen. Er bringt seine zwei Kinder mit. Ich freue mich sehr darauf."},
-        {"role": "user", "content": message},
+        {"role": "user", "content": "Hallo, ich bin Hannelore. Ich habe drei Kinder, die heißen Max, Stefan und Christiane. Ich wohne in Otterfing, bin 76 Jahre alt und mein Mann ist vor 14 Jahren an Krebs verstorben. Ich male gerne und spiele viel Scrabble. Mein Sohn Stefan kommt mich am Mittwoch besuchen. Er bringt seine zwei Kinder mit. Ich freue mich sehr darauf." + message},
         ]
     print('responding...')
     try:
-        response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages = messages, max_tokens = 100)
+        response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages = messages, max_tokens = 100, temperature = 0.1)
         print('response received!')
     except: 
         print('response failed')
