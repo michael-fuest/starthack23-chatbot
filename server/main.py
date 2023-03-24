@@ -66,8 +66,7 @@ def play_response(text):
         engine.setProperty('voice', 'com.apple.speech.synthesis.voice.yannick.premium')
     except:
         change_voice(engine, 'de_DE', 'VoiceGenderMale')
-    engine.setProperty('rate', 130)
-    engine.setProperty('volume', 10)
+    engine.setProperty('rate', 10)
     engine.say(text)
     engine.runAndWait()
     print('Response played')
