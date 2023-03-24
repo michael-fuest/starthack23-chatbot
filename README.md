@@ -39,10 +39,3 @@ To set up the project, follow these steps:
     ```
 
 5. Open up a browser and access the app under `127.0.0.1:8000`
-
-
-## Creators
-
-- Thomas Boehm
-- Michael Fuest
-- Nicolas Neudeck"""
