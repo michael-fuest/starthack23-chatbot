@@ -57,6 +57,7 @@ To set up the project, follow these steps:
     │ ├── .env
     │ └── main.py
     ├── .gitignore
+    ├── face.png
     ├── README.md
     ├── requirements.txt
     └── Testing.py
