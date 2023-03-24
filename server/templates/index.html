@@ -11,6 +11,12 @@
         <img id="gif" src="static/leise.gif" />
     </div>
     <script>
+        document.addEventListener('keyup', event => {
+            if (event.code === 'Space') {
+                changeTalking();
+            }
+        })
+
         navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
             if (!MediaRecorder.isTypeSupported('audio/webm'))
                 return alert('Browser not supported');
@@ -51,6 +57,15 @@
                 console.log({ event: 'onerror', error });
             }
         })
+
+        function changeTalking() {
+            const gif = document.getElementById('gif');
+            if (gif.src.includes('sprechen')) {
+                gif.src = 'static/leise.gif';
+            } else {
+                gif.src = 'static/sprechen.gif';
+            }
+        }
     </script>
 </body>
 
