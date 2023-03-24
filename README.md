@@ -18,49 +18,28 @@ To set up the project, follow these steps:
     DEEPGRAM_API_KEY=<your deepgram api key>
     ```
 
-2. Create a virtual environment with the following command:
+2. Create a virtual environment and activate it:
 
     ```
     python -m venv venv
-    ```
-
-3. Activate the virtual environment with the following command:
-
-    ```
     source venv/bin/activate
     ```
 
-4. Install all the dependencies with the following command:
+3. Install all the dependencies:
 
     ```
     pip install -r requirements.txt
     ```
 
-5. To start the application, navigate to the server folder and start the web app with the following command:
+4. To start the application, navigate to the server folder and start the web app:
 
     ```
     cd server
     uvicorn main:app --reload
     ```
 
-## Folder Structure
+5. Open up a browser and access the app under `127.0.0.1:8000`
 
-    ├-env
-    ├-server
-    │ ├── __pycache__
-    │ ├── static
-    │   ├── styles.css
-    │   ├── leise.gif
-    │   └── sprechen.gif
-    │ ├── templates
-    │   └── index.html
-    │ ├── .env
-    │ └── main.py
-    ├── .gitignore
-    ├── face.png
-    ├── README.md
-    ├── requirements.txt
-    └── Testing.py
 
 ## Creators
 
