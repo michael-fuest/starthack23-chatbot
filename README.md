@@ -2,6 +2,8 @@
 
 This project is part of the StartHack23 Chatbot project with Antler. Our goal is to create a visual and audio chatbot to help combat loneliness among the elderly. To get started, we followed this tutorial: https://github.com/deepgram-devs/live-transcription-fastapi.
 
+![face.png](face.png)
+
 ## Required API Keys
 In order to get this project to run, you will need to sign up for a free OpenAI and Deepgram account. Once you do, you will be able to generate API keys for authentication. These keys are required to get this project to run.
 
