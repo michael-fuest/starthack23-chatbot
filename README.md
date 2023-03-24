@@ -2,6 +2,9 @@
 
 This project is part of the StartHack23 Chatbot project with Antler. Our goal is to create a visual and audio chatbot to help combat loneliness among the elderly. To get started, we followed this tutorial: https://github.com/deepgram-devs/live-transcription-fastapi.
 
+## Required API Keys
+In order to get this project to run, you will need to sign up for a free OpenAI and Deepgram account. Once you do, you will be able to generate API keys for authentication. These keys are required to get this project to run.
+
 ## Setup Instructions
 
 To set up the project, follow these steps:
@@ -34,27 +37,28 @@ To set up the project, follow these steps:
 5. To start the application, navigate to the server folder and start the web app with the following command:
 
     ```
+    cd server
     uvicorn main:app --reload
     ```
 
 ## Folder Structure
 
-    ├── server
-    │ ├── main.py
-    │ ├── deepgram.py
-    │ ├── openai.py
-    │ └── models
-    │ ├── gpt2
-    │ └── tacotron2
-    ├── frontend
-    │ ├── index.html
-    │ ├── script.js
-    │ └── style.css
-    ├── .env
+    ├-env
+    ├-server
+    │ ├── __pycache__
+    │ ├── static
+    │   ├── styles.css
+    │   ├── leise.gif
+    │   └── sprechen.gif
+    │ ├── templates
+    │   └── index.html
+    │ ├── .env
+    │ └── main.py
+    ├── .gitignore
     ├── README.md
     ├── requirements.txt
-    ├── LICENSE
-    └── .gitignore
+    └── Testing.py
+
 ## Creators
 
 - Thomas Boehm
