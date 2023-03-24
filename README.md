@@ -5,7 +5,7 @@ We built an animated chatbot to help combat loneliness among the elderly. To get
 ![face.png](face.png)
 
 ## Required API Keys
-In order to get this project to run, you will need to sign up for a free OpenAI and Deepgram account. Once you do, you will be able to generate API keys for authentication. These keys are required to get this project to run.
+In order to get this project to run, you will need to sign up for a free [OpenAI](https://platform.openai.com/account/api-keys) and [Deepgram](https://console.deepgram.com/signup) account. Once you do, you will be able to generate API keys for authentication. These keys are required to get this project to run.
 
 ## Setup Instructions
 
