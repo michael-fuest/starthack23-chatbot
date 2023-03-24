@@ -25,7 +25,7 @@
             const socket = new WebSocket('ws://localhost:8000/listen');
 
             socket.onopen = () => {
-                document.querySelector('#status').textContent = 'Connected';
+                //document.querySelector('#status').textContent = 'Connected';
                 console.log({ event: 'onopen' });
                 mediaRecorder.addEventListener('dataavailable', async (event) => {
                     if (event.data.size > 0 && socket.readyState == 1) {
@@ -43,8 +43,6 @@
                         document.getElementById('gif').src = 'static/sprechen.gif';
                     } else if (received === 'TALKING=FALSE') {
                         document.getElementById('gif').src = 'static/leise.gif';
-                    } else {
-                        document.querySelector('#transcript').textContent += ' ' + received;
                     }
                 }
             }
