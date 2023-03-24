@@ -1,6 +1,6 @@
 # StartHack23 - Chatbot Project with Antler
 
-This project is part of the StartHack23 Chatbot project with Antler. Our goal is to create a visual and audio chatbot to help combat loneliness among the elderly. To get started, we followed this tutorial: https://github.com/deepgram-devs/live-transcription-fastapi.
+We built an animated chatbot to help combat loneliness among the elderly. To get started, we followed [this tutorial](https://github.com/deepgram-devs/live-transcription-fastapi).
 
 ![face.png](face.png)
 
